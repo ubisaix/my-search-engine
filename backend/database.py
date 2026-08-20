@@ -52,6 +52,74 @@ def search_documents(query):
 
         with conn.cursor() as cur:
 
+            search = f"%{query}%"
+
+            cur.execute("""
+                SELECT
+                    title,
+                    url,
+                    content,
+
+                    (
+                        CASE
+                            WHEN title ILIKE %s
+                            THEN 100
+                            ELSE 0
+                        END
+                    )
+
+                    +
+
+                    (
+                        CASE
+                            WHEN url ILIKE %s
+                            THEN 50
+                            ELSE 0
+                        END
+                    )
+
+                    +
+
+                    (
+                        LENGTH(content)
+                        -
+                        LENGTH(
+                            REPLACE(
+                                LOWER(content),
+                                LOWER(%s),
+                                ''
+                            )
+                        )
+                    )
+
+                    AS score
+
+                FROM documents
+
+                WHERE
+                    title ILIKE %s
+                    OR url ILIKE %s
+                    OR content ILIKE %s
+
+                ORDER BY score DESC
+
+                LIMIT 50
+
+            """, (
+                search,
+                search,
+                query,
+                search,
+                search,
+                search
+            ))
+
+            return cur.fetchall()
+
+    with get_connection() as conn:
+
+        with conn.cursor() as cur:
+
             cur.execute("""
                 SELECT title, url, content
                 FROM documents
