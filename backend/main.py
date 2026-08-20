@@ -1,7 +1,15 @@
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.database import (
+    create_table,
+    add_document,
+    search_documents
+)
+
+
 app = FastAPI(title="My Search Engine API")
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -11,67 +19,79 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-documents = [
-    {
-        "title": "Wikipedia",
-        "url": "https://www.wikipedia.org/",
-        "text": "Wikipedia არის თავისუფალი ონლაინ ენციკლოპედია."
-    },
-    {
-        "title": "GitHub",
-        "url": "https://github.com/",
-        "text": "GitHub არის პროგრამული პროექტების ჰოსტინგის პლატფორმა."
-    },
-    {
-        "title": "Google",
-        "url": "https://www.google.com/",
-        "text": "Google არის საძიებო და ტექნოლოგიური კომპანია."
-    },
-    {
-        "title": "YouTube",
-        "url": "https://www.youtube.com/",
-        "text": "YouTube არის ვიდეოების გაზიარების პლატფორმა."
-    }
-]
+
+@app.on_event("startup")
+def startup():
+
+    create_table()
+
+    # პირველი სატესტო მონაცემები
+    add_document(
+        "Wikipedia",
+        "https://www.wikipedia.org/",
+        "Wikipedia არის თავისუფალი ონლაინ ენციკლოპედია."
+    )
+
+    add_document(
+        "GitHub",
+        "https://github.com/",
+        "GitHub არის პროგრამული პროექტების ჰოსტინგის პლატფორმა."
+    )
+
+    add_document(
+        "Google",
+        "https://www.google.com/",
+        "Google არის საძიებო და ტექნოლოგიური კომპანია."
+    )
+
+    add_document(
+        "YouTube",
+        "https://www.youtube.com/",
+        "YouTube არის ვიდეოების გაზიარების პლატფორმა."
+    )
 
 
 @app.get("/")
 def home():
+
     return {
         "name": "My Search Engine",
-        "status": "online"
+        "status": "online",
+        "database": "connected"
     }
 
 
 @app.get("/search")
-def search(q: str = Query(..., min_length=1)):
+def search(
+    q: str = Query(..., min_length=1)
+):
 
-    query = q.lower().strip()
+    query = q.strip()
+
+    rows = search_documents(query)
 
     results = []
 
-    for document in documents:
+    for row in rows:
 
-        content = (
-            document["title"] + " " +
-            document["text"]
-        ).lower()
+        title, url, content = row
 
-        if query in content:
-
-            results.append({
-                "title": document["title"],
-                "url": document["url"],
-                "description": document["text"]
-            })
+        results.append({
+            "title": title,
+            "url": url,
+            "description": content
+        })
 
     return {
-        "query": q,
+        "query": query,
         "total": len(results),
         "results": results
     }
+
+
 @app.get("/test")
 def test():
+
     return {
         "message": "MY SEARCH ENGINE API WORKS"
     }
