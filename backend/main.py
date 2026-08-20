@@ -76,17 +76,13 @@ def search(
 
     for row in rows:
 
-        results.append({
-    "title": title,
-    "url": url,
-    "description": content[:500],
-    "score": score
-})
+        title, url, content, score = row
 
         results.append({
             "title": title,
             "url": url,
-            "description": content[:500]
+            "description": content[:500],
+            "score": score
         })
 
     return {
