@@ -1,1 +1,172 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>My Search Engine</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #ffffff;
+            color: #202124;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .logo {
+            margin-top: 150px;
+            font-size: 58px;
+            font-weight: bold;
+            letter-spacing: -3px;
+        }
+
+        .logo span {
+            color: #4285f4;
+        }
+
+        .subtitle {
+            margin-top: 10px;
+            color: #777;
+            font-size: 16px;
+        }
+
+        .search-box {
+            margin-top: 35px;
+            width: 90%;
+            max-width: 650px;
+            height: 54px;
+            border: 1px solid #dfe1e5;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            padding: 0 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .search-box input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 18px;
+            padding: 10px;
+        }
+
+        .search-icon {
+            font-size: 22px;
+            color: #777;
+        }
+
+        .search-button {
+            margin-top: 25px;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            background: #f8f9fa;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .search-button:hover {
+            box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+        }
+
+        .footer {
+            margin-top: auto;
+            padding: 25px;
+            color: #777;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .logo {
+                margin-top: 100px;
+                font-size: 42px;
+            }
+
+            .search-box {
+                width: 94%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="logo">
+        <span>My</span> Search
+    </div>
+
+    <div class="subtitle">
+        შენი საკუთარი საძიებო სისტემა
+    </div>
+
+    <form class="search-box" onsubmit="search(event)">
+        <div class="search-icon">🔍</div>
+
+        <input
+            id="searchInput"
+            type="text"
+            placeholder="მოძებნე ინტერნეტში..."
+            autocomplete="off"
+        >
+    </form>
+
+    <button class="search-button" onclick="searchButton()">
+        ძებნა
+    </button>
+
+    <div class="footer">
+        © 2026 My Search Engine
+    </div>
+
+</div>
+
+<script>
+
+function search(event) {
+
+    event.preventDefault();
+
+    const query =
+        document.getElementById("searchInput").value.trim();
+
+    if (!query) {
+        return;
+    }
+
+    alert("ძებნა: " + query);
+
+}
+
+function searchButton() {
+
+    const query =
+        document.getElementById("searchInput").value.trim();
+
+    if (!query) {
+        return;
+    }
+
+    alert("ძებნა: " + query);
+
+}
+
+</script>
+
+</body>
+</html>
