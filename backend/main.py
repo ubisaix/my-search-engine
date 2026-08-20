@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.database import (
@@ -6,6 +6,8 @@ from backend.database import (
     add_document,
     search_documents
 )
+
+from backend.crawler import crawl
 
 
 app = FastAPI(title="My Search Engine API")
@@ -25,7 +27,7 @@ def startup():
 
     create_table()
 
-    # პირველი სატესტო მონაცემები
+    # საწყისი მონაცემები
     add_document(
         "Wikipedia",
         "https://www.wikipedia.org/",
@@ -79,13 +81,35 @@ def search(
         results.append({
             "title": title,
             "url": url,
-            "description": content
+            "description": content[:500]
         })
 
     return {
         "query": query,
         "total": len(results),
         "results": results
+    }
+
+
+@app.get("/crawl")
+def crawl_url(
+    url: str = Query(..., min_length=8)
+):
+
+    if not url.startswith(
+        ("http://", "https://")
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="URL must start with http:// or https://"
+        )
+
+    links = crawl(url)
+
+    return {
+        "url": url,
+        "status": "indexed",
+        "links_found": len(links)
     }
 
 
