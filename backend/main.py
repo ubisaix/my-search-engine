@@ -70,3 +70,8 @@ def search(q: str = Query(..., min_length=1)):
         "total": len(results),
         "results": results
     }
+@app.get("/test")
+def test():
+    return {
+        "message": "MY SEARCH ENGINE API WORKS"
+    }
