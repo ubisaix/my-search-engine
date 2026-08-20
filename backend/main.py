@@ -76,7 +76,12 @@ def search(
 
     for row in rows:
 
-        title, url, content = row
+        results.append({
+    "title": title,
+    "url": url,
+    "description": content[:500],
+    "score": score
+})
 
         results.append({
             "title": title,
