@@ -1,5 +1,7 @@
 import sys
+import time
 import requests
+
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 
@@ -8,8 +10,17 @@ from backend.database import add_document
 
 USER_AGENT = "MySearchEngineBot/1.0"
 
+MAX_PAGES = 10
 
-def crawl(url):
+visited = set()
+
+
+def crawl_page(url):
+
+    if url in visited:
+        return []
+
+    visited.add(url)
 
     try:
 
@@ -25,27 +36,22 @@ def crawl(url):
 
         response.raise_for_status()
 
-        content_type = response.headers.get(
+        if "text/html" not in response.headers.get(
             "content-type",
             ""
-        )
-
-        if "text/html" not in content_type:
-            print("Not HTML:", url)
-            return
+        ):
+            return []
 
         soup = BeautifulSoup(
             response.text,
             "html.parser"
         )
 
-        # არასაჭირო ელემენტების წაშლა
         for element in soup(
             ["script", "style", "noscript"]
         ):
             element.decompose()
 
-        # გვერდის სათაური
         title = ""
 
         if soup.title:
@@ -57,34 +63,30 @@ def crawl(url):
         if not title:
             title = url
 
-        # გვერდის ტექსტი
         text = soup.get_text(
             " ",
             strip=True
         )
 
-        # ზედმეტი სივრცეების მოცილება
         text = " ".join(
             text.split()
         )
 
-        if not text:
-            print("No text:", url)
-            return
+        if text:
 
-        # PostgreSQL-ში შენახვა
-        add_document(
-            title,
-            url,
-            text
-        )
+            add_document(
+                title,
+                url,
+                text
+            )
 
-        print(
-            f"Indexed: {title} -> {url}"
-        )
+            print(
+                f"Indexed: {title}"
+            )
 
-        # გვერდზე არსებული ბმულები
         links = set()
+
+        base_domain = urlparse(url).netloc
 
         for link in soup.find_all(
             "a",
@@ -100,27 +102,64 @@ def crawl(url):
                 absolute_url
             )
 
-            if parsed.scheme in (
+            if parsed.scheme not in (
                 "http",
                 "https"
             ):
-                links.add(
-                    absolute_url
-                )
+                continue
 
-        print(
-            f"Found {len(links)} links"
-        )
+            if parsed.netloc != base_domain:
+                continue
+
+            clean_url = (
+                parsed.scheme
+                + "://"
+                + parsed.netloc
+                + parsed.path
+            )
+
+            if clean_url not in visited:
+
+                links.add(clean_url)
 
         return list(links)
 
     except Exception as error:
 
         print(
-            f"Error crawling {url}: {error}"
+            f"Error: {url} -> {error}"
         )
 
         return []
+
+
+def crawl(start_url):
+
+    queue = [start_url]
+
+    while queue and len(visited) < MAX_PAGES:
+
+        url = queue.pop(0)
+
+        print(
+            f"Crawling: {url}"
+        )
+
+        new_links = crawl_page(url)
+
+        for link in new_links:
+
+            if (
+                link not in visited
+                and link not in queue
+                and len(visited) + len(queue) < MAX_PAGES
+            ):
+
+                queue.append(link)
+
+        time.sleep(1)
+
+    return list(visited)
 
 
 if __name__ == "__main__":
@@ -133,6 +172,6 @@ if __name__ == "__main__":
 
         sys.exit(1)
 
-    url = sys.argv[1]
-
-    crawl(url)
+    crawl(
+        sys.argv[1]
+    )
